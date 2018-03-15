@@ -79,7 +79,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         ConnectivityManager connMgr =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        NetworkInfo networkInfo = null;
+        if (connMgr != null) {
+            networkInfo = connMgr.getActiveNetworkInfo();
+        }
         if (networkInfo != null && networkInfo.isConnected()) {
             wifiConnected = networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
             mobileConnected = networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
@@ -144,7 +147,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onReceive(Context context, Intent intent) {
             ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            NetworkInfo networkInfo = null;
+            if (connMgr != null) {
+                networkInfo = connMgr.getActiveNetworkInfo();
+            }
 
             // Checks the user prefs and the network connection. Based on the result, decides
             // whether
