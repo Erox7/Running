@@ -15,8 +15,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.location.LocationSettingsRequest;
-
 public class MainActivity extends AppCompatActivity {
     public EditText userET;
     public EditText passwordET;
@@ -90,10 +88,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
-                Toast.makeText(this,"PERMISSION GRANTED",Toast.LENGTH_LONG);
+                Toast.makeText(this,"PERMISSION GRANTED",Toast.LENGTH_LONG).show();
             } else {
 
-                Toast.makeText(this,"PERMISSION NOT GRANTED",Toast.LENGTH_LONG);
+                Toast.makeText(this,"PERMISSION NOT GRANTED",Toast.LENGTH_LONG).show();
                 // Permission denied.
 
                 // Notify the user via a SnackBar that they have rejected a core permission for the
