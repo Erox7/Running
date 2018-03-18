@@ -45,10 +45,18 @@
             android:label="SettingsActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
+                <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ProfileActivity"
+            android:label="@string/profile"
+            />
+
+
+
     </application>
 
 </manifest>

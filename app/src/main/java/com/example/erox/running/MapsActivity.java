@@ -7,7 +7,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -131,6 +133,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return true;
             case R.id.refresh:
                 //MAKEACTION
+                return true;
+            case R.id.Profile:
+                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
+                startActivity(profileActivity);
+                return true;
+            case R.id.Music:
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
+                return true;
+            case R.id.Groups:
+                Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
+                startActivity(groupsActivity);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -4,4 +4,10 @@
         android:title="@string/settings" />
     <item android:id="@+id/refresh"
         android:title="@string/refresh" />
+    <item android:id="@+id/Profile"
+        android:title="@string/profile" />
+    <item android:id="@+id/Music"
+        android:title="@string/music" />
+    <item android:id="@+id/Groups"
+        android:title="@string/groups" />
 </menu>
