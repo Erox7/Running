@@ -161,20 +161,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // If device has its Wi-Fi connection, sets refreshDisplay
                 // to true. This causes the display to be refreshed when the user
                 // returns to the app.
-                refreshDisplay = true;
                 Toast.makeText(context, R.string.wifi_connected, Toast.LENGTH_SHORT).show();
 
                 // If the setting is ANY network and there is a network connection
                 // (which by process of elimination would be mobile), sets refreshDisplay to true.
             } else if (ANY.equals(sPref) && networkInfo != null) {
-                refreshDisplay = true;
-
+                Toast.makeText(context, R.string.network_connected, Toast.LENGTH_SHORT).show();
                 // Otherwise, the app can't download content--either because there is no network
                 // connection (mobile or Wi-Fi), or because the pref setting is WIFI, and there
                 // is no Wi-Fi connection.
                 // Sets refreshDisplay to false.
             } else {
-                refreshDisplay = true;
                 Toast.makeText(context, R.string.lost_connection, Toast.LENGTH_SHORT).show();
             }
         }
