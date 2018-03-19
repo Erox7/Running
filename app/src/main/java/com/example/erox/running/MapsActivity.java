@@ -5,30 +5,48 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.util.SortedList;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import com.example.erox.running.POJO.Example;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
-
     // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
     // Whether there is a mobile connection.
@@ -39,6 +57,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static String sPref = null;
     NetworkReceiver receiver;
     private GoogleMap mMap;
+    private boolean mapClicked = false;
+    private Marker destination;
+    private Marker origin;
+    Polyline line;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,8 +129,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         float zoomlvl = 15.0f;
         // Add a marker in Sydney and move the camera
         LatLng Lleida = new LatLng(41.60, 0.624);
-        mMap.addMarker(new MarkerOptions().position(Lleida).title("Marker in Lleida"));
+        origin = mMap.addMarker( new MarkerOptions().position(Lleida).title(getString(R.string.origin)).icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lleida,zoomlvl));
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng point) {
+                mapClicked = true;
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
+                if(destination != null){
+                    destination.remove();
+                }
+                destination = mMap.addMarker(new MarkerOptions().
+                        position(point).
+                        title(getString(R.string.destiny)).
+                        icon(BitmapDescriptorFactory.fromResource(R.drawable.green_dot)));
+
+            }
+        });
     }
 
 
@@ -137,11 +174,96 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    public void startRunningClicked(View view) {
+        if(mapClicked == false){
+            Toast.makeText(this,getString(R.string.noPositionClicked),Toast.LENGTH_LONG).show();
+        }else{
+            build_retrofit_and_get_response("walking");
+        }
+    }
 
+    private void build_retrofit_and_get_response(String type) {
 
+        String url = "https://maps.googleapis.com/maps/";
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
+        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
+
+        call.enqueue(new Callback<Example>() {
+            @Override
+            public void onResponse(Response<Example> response, Retrofit retrofit) {
+
+                try {
+                    //Remove previous line from map
+                    if (line != null) {
+                        line.remove();
+                    }
+                    // This loop will go through all the results and add marker on each location.
+                    for (int i = 0; i < response.body().getRoutes().size(); i++) {
+                        String distance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                        String time = response.body().getRoutes().get(i).getLegs().get(i).getDuration().getText();
+                        //ShowDistanceDuration.setText("Distance:" + distance + ", Duration:" + time);
+                        String encodedString = response.body().getRoutes().get(0).getOverviewPolyline().getPoints();
+                        List<LatLng> list = decodePoly(encodedString);
+                        line = mMap.addPolyline(new PolylineOptions()
+                                .addAll(list)
+                                .width(20)
+                                .color(Color.RED)
+                                .geodesic(true)
+                        );
+                    }
+                } catch (Exception e) {
+                    Log.d("onResponse", "There is an error");
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.d("onFailure", t.toString());
+            }
+        });
+
+    }
+
+    private List<LatLng> decodePoly(String encoded) {
+        List<LatLng> poly = new ArrayList<LatLng>();
+        int index = 0, len = encoded.length();
+        int lat = 0, lng = 0;
+
+        while (index < len) {
+            int b, shift = 0, result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            LatLng p = new LatLng( (((double) lat / 1E5)),
+                    (((double) lng / 1E5) ));
+            poly.add(p);
+        }
+
+        return poly;
+    }
     public class NetworkReceiver extends BroadcastReceiver {
 
         @Override

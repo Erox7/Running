@@ -15,5 +15,9 @@
     <string name="action_settings">Settings</string>
     <string name="permission_rationale">Location permission is needed for core functionality</string>
     <string name="permission_denied_explanation">Permission was denied, but is needed for core         functionality.</string>
+    <string name="StartRunning">Start Running</string>
+    <string name="origin">Origin</string>
+    <string name="destiny">Destination</string>
+    <string name="noPositionClicked">You need to click a position where to run.</string>
 
 </resources>
