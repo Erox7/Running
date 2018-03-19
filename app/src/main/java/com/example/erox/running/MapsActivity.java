@@ -168,9 +168,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
                 startActivity(settingsActivity);
                 return true;
-            case R.id.refresh:
-                //MAKEACTION
-                return true;
             case R.id.Profile:
                 Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
                 startActivity(profileActivity);
