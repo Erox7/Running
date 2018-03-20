@@ -36,5 +36,16 @@
             android:layout_gravity="center|bottom"
             android:padding="20dp"
             />
+
+        <Button
+            android:id="@+id/stopRunningButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/StopRunning"
+            android:onClick="stopRunningClicked"
+            android:visibility="invisible"
+            android:layout_gravity="center|bottom"
+            android:padding="20dp"
+            />
     </fragment>
 </FrameLayout>
