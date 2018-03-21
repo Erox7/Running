@@ -1,5 +1,6 @@
 package com.example.erox.running;
 
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.SharedPreferences;
@@ -7,6 +8,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
@@ -15,6 +17,7 @@ public class SettingsActivity extends PreferenceActivity implements OnSharedPref
     {
         super.onCreate(savedInstanceState);
         getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
+
     }
 
     public static class MyPreferenceFragment extends PreferenceFragment
@@ -33,8 +36,10 @@ public class SettingsActivity extends PreferenceActivity implements OnSharedPref
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Sets refreshDisplay to true so that when the user returns to the main
         // activity, the display refreshes to reflect the new settings.
-        System.out.println("AHJASDBFKASDFJASDFKAVSDKLFDBASJFHASDFASDFAGFDASFSDF");
-        System.out.println(key);
-        System.out.println(sharedPreferences);
+        if(key.equals(MapsActivity.WIFI)){
+            MapsActivity.sPref = MapsActivity.WIFI;
+        }else if(key.equals(MapsActivity.ANY)){
+            MapsActivity.sPref = MapsActivity.ANY;
+        }
     }
 }

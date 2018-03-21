@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -63,6 +64,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean mapClicked = false;
     private Marker destination;
     private Marker origin;
+    Button start, stop;
     Polyline line;
     private Button startButton;
     private long startTime;
@@ -71,12 +73,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+        start = findViewById(R.id.startRunningButton);
+        stop = findViewById(R.id.stopRunningButton);
+
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
@@ -87,11 +93,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStart() {
         super.onStart();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-
+        sharedPrefs.registerOnSharedPreferenceChangeListener(new SettingsActivity());
         // Retrieves a string value for the preferences. The second parameter
         // is the default value to use if a preference value is not found.
         sPref = sharedPrefs.getString("listPref", "Wi-Fi");
-
         updateConnectedFlags();
     }
 
@@ -193,6 +198,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
         } else {
             build_retrofit_and_get_response("walking");
+            start.setVisibility(View.INVISIBLE);
+            stop.setVisibility(View.VISIBLE);
             if (startButton.getText() == getText(R.string.StartRunning)) {
                 startButton.setText(R.string.StopRunning);
                 startTime = System.currentTimeMillis();
@@ -205,6 +212,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Toast.makeText(this, "Time: "+ totalTime + "seconds", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    public void stopRunningClicked(View view){
+        Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
     }
 
     private void build_retrofit_and_get_response(String type) {

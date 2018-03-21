@@ -24,5 +24,6 @@
     <string name="destiny">Destination</string>
     <string name="noPositionClicked">You need to click a position where to run.</string>
     <string name="StopRunning">Stop Running</string>
+    <string name="forcedStop">Stop before reaching the goal</string>
 
 </resources>
