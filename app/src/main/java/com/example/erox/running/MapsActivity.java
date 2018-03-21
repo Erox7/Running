@@ -87,6 +87,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     Button start, stop;
     Polyline line;
+    private Button startButton;
+    private long startTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
+        startButton = (Button) findViewById(R.id.startRunningButton);
     }
 
     @Override
@@ -174,12 +177,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(first, zoomlvl));
             }
         });
+        LatLng Lleida = new LatLng(41.60, 0.624);
+        origin = mMap.addMarker(new MarkerOptions().position(Lleida).title(getString(R.string.origin)).icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lleida, zoomlvl));
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
                 mapClicked = true;
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
-                if(destination != null){
+                if (destination != null) {
                     destination.remove();
                 }
                 destination = mMap.addMarker(new MarkerOptions().
@@ -191,14 +197,63 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+
+    // Populates the activity's options menu.
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainmenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    // Handles the user's menu selection.
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
+                startActivity(settingsActivity);
+                return true;
+            case R.id.Profile:
+                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
+                startActivity(profileActivity);
+                return true;
+            case R.id.Music:
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
+                return true;
+            case R.id.Groups:
+                //Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
+                //startActivity(groupsActivity);
+                Toast.makeText(this, "Can't implement Group funcionality at the moment", Toast.LENGTH_LONG).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     public void startRunningClicked(View view) {
         if(mapClicked == false){
             Toast.makeText(this,getString(R.string.noPositionClicked),Toast.LENGTH_LONG).show();
         }else{
+        if (mapClicked == false) {
+            Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
+        } else {
+            build_retrofit_and_get_response("walking");
             start.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
             startLocationUpdates();
             build_retrofit_and_get_response("walking");
+            if (startButton.getText() == getText(R.string.StartRunning)) {
+                startButton.setText(R.string.StopRunning);
+                startTime = System.currentTimeMillis();
+
+            } else {
+                startButton.setText(R.string.StartRunning);
+                long finishTime = System.currentTimeMillis();
+                float totalTime = (finishTime - startTime) / 1000;
+
+                Toast.makeText(this, "Time: "+ totalTime + "seconds", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -224,7 +279,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
         Call<Example> call = service.getDistanceDuration("metric", mCurrentLocation.getLatitude()+ "," + mCurrentLocation.getLongitude(),destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
-
         call.enqueue(new Callback<Example>() {
             @Override
             public void onResponse(Response<Example> response, Retrofit retrofit) {
@@ -289,13 +343,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
             lng += dlng;
 
-            LatLng p = new LatLng( (((double) lat / 1E5)),
-                    (((double) lng / 1E5) ));
+            LatLng p = new LatLng((((double) lat / 1E5)),
+                    (((double) lng / 1E5)));
             poly.add(p);
         }
 
         return poly;
     }
+
 
     @SuppressLint("MissingPermission")
     private void startLocationUpdates(){
