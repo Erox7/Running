@@ -254,6 +254,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         stopLocationUpdates();
         stopButtonClicked = true;
         endOfTheRun();
+        Toast.makeText(this,"IMPLEMENT WITH THE MUSCLE THE FINAL PART",Toast.LENGTH_LONG).show();
     }
     private void build_retrofit_and_get_response(String type) {
 
