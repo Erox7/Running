@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
@@ -63,7 +64,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker destination;
     private Marker origin;
     Polyline line;
-
+    private Button startButton;
+    private long startTime;
+    private long finishTime;
+    private float totalTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +81,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
+        startButton = (Button) findViewById(R.id.startRunningButton);
     }
 
     @Override
@@ -131,14 +136,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         float zoomlvl = 15.0f;
         // Add a marker in Sydney and move the camera
         LatLng Lleida = new LatLng(41.60, 0.624);
-        origin = mMap.addMarker( new MarkerOptions().position(Lleida).title(getString(R.string.origin)).icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lleida,zoomlvl));
+        origin = mMap.addMarker(new MarkerOptions().position(Lleida).title(getString(R.string.origin)).icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lleida, zoomlvl));
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
                 mapClicked = true;
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(point));
-                if(destination != null){
+                if (destination != null) {
                     destination.remove();
                 }
                 destination = mMap.addMarker(new MarkerOptions().
@@ -149,7 +154,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-
 
 
     // Populates the activity's options menu.
@@ -176,8 +180,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
                 return true;
             case R.id.Groups:
-                Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
-                startActivity(groupsActivity);
+                //Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
+                //startActivity(groupsActivity);
+                Toast.makeText(this, "Can't implement Group funcionality at the moment", Toast.LENGTH_LONG).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -185,10 +190,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void startRunningClicked(View view) {
-        if(mapClicked == false){
-            Toast.makeText(this,getString(R.string.noPositionClicked),Toast.LENGTH_LONG).show();
-        }else{
+        if (mapClicked == false) {
+            Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
+        } else {
             build_retrofit_and_get_response("walking");
+            if (startButton.getText() == getText(R.string.StartRunning)) {
+                startButton.setText(R.string.StopRunning);
+                startTime = System.currentTimeMillis();
+
+            } else {
+                startButton.setText(R.string.StartRunning);
+                finishTime = System.currentTimeMillis();
+                totalTime = (finishTime - startTime)/1000;
+
+                Toast.makeText(this, "Time: "+ totalTime + "seconds", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -203,7 +219,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
-        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude, destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
 
         call.enqueue(new Callback<Example>() {
             @Override
@@ -267,13 +283,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
             lng += dlng;
 
-            LatLng p = new LatLng( (((double) lat / 1E5)),
-                    (((double) lng / 1E5) ));
+            LatLng p = new LatLng((((double) lat / 1E5)),
+                    (((double) lng / 1E5)));
             poly.add(p);
         }
 
         return poly;
     }
+
     public class NetworkReceiver extends BroadcastReceiver {
 
         @Override

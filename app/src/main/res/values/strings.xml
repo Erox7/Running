@@ -23,5 +23,6 @@
     <string name="origin">Origin</string>
     <string name="destiny">Destination</string>
     <string name="noPositionClicked">You need to click a position where to run.</string>
+    <string name="StopRunning">Stop Running</string>
 
 </resources>
