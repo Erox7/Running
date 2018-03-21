@@ -1,5 +1,6 @@
 package com.example.erox.running;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,11 +9,14 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.util.SortedList;
 import android.util.Log;
@@ -25,6 +29,11 @@ import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
 import com.example.erox.running.POJO.Example;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,6 +44,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,10 +71,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public static String sPref = null;
     NetworkReceiver receiver;
+    LocationRequest mLocationRequest;
     private GoogleMap mMap;
     private boolean mapClicked = false;
-    private Marker destination;
-    private Marker origin;
+    private Marker destination,origin,person;
+    private LocationCallback mLocationCallback;
+    private Location mCurrentLocation;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private FusedLocationProviderClient mFusedLocationClient;
+    /**
+     * The fastest rate for active location updates. Exact. Updates will never be more frequent
+     * than this value.
+     */
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     Button start, stop;
     Polyline line;
 
@@ -72,6 +93,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        createLocationCallback();
+        createLocationRequest();
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -131,14 +156,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        float zoomlvl = 15.0f;
         // Add a marker in Sydney and move the camera
-        LatLng Lleida = new LatLng(41.60, 0.624);
-        origin = mMap.addMarker( new MarkerOptions().position(Lleida).title(getString(R.string.origin)).icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lleida,zoomlvl));
+        mFusedLocationClient.getLastLocation().addOnCompleteListener(this, new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                float zoomlvl = 15.0f;
+                mCurrentLocation = task.getResult();
+                LatLng first = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+                origin = mMap.addMarker(new MarkerOptions().
+                        position(first).
+                        title(getString(R.string.origin)).
+                        icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(first, zoomlvl));
+            }
+        });
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng point) {
@@ -156,52 +191,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-
-
-    // Populates the activity's options menu.
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mainmenu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    // Handles the user's menu selection.
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.settings:
-                Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
-                startActivity(settingsActivity);
-                return true;
-            case R.id.Profile:
-                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
-                startActivity(profileActivity);
-                return true;
-            case R.id.Music:
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
-                return true;
-            case R.id.Groups:
-                Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
-                startActivity(groupsActivity);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     public void startRunningClicked(View view) {
         if(mapClicked == false){
             Toast.makeText(this,getString(R.string.noPositionClicked),Toast.LENGTH_LONG).show();
         }else{
-            build_retrofit_and_get_response("walking");
             start.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
+            startLocationUpdates();
+            build_retrofit_and_get_response("walking");
         }
     }
 
     public void stopRunningClicked(View view){
         Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
+        stopLocationUpdates();
     }
 
     private void build_retrofit_and_get_response(String type) {
@@ -215,7 +218,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
-        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
+        Call<Example> call = service.getDistanceDuration("metric", mCurrentLocation.getLatitude()+ "," + mCurrentLocation.getLongitude(),destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
 
         call.enqueue(new Callback<Example>() {
             @Override
@@ -285,6 +288,91 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         return poly;
+    }
+
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdates(){
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper());
+        updatePosition();
+    }
+
+    private void updatePosition() {
+
+        if(mCurrentLocation != null && person != null){
+            person.remove();
+            person = mMap.addMarker(new MarkerOptions().
+                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    title(getString(R.string.itsMe)).
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
+        }else if( mCurrentLocation != null){
+            person = mMap.addMarker(new MarkerOptions().
+                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    title(getString(R.string.itsMe)).
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
+        }
+    }
+
+    private void stopLocationUpdates() {
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+
+                    }
+                });
+    }
+    protected void createLocationRequest(){
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+
+                super.onLocationResult(locationResult);
+                mCurrentLocation = locationResult.getLastLocation();
+                updatePosition();
+            }
+        };
+    }
+
+    // Populates the activity's options menu.
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainmenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    // Handles the user's menu selection.
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
+                startActivity(settingsActivity);
+                return true;
+            case R.id.Profile:
+                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
+                startActivity(profileActivity);
+                return true;
+            case R.id.Music:
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
+                return true;
+            case R.id.Groups:
+                Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
+                startActivity(groupsActivity);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
     public class NetworkReceiver extends BroadcastReceiver {
 

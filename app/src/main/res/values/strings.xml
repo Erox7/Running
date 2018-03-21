@@ -25,5 +25,6 @@
     <string name="noPositionClicked">You need to click a position where to run.</string>
     <string name="StopRunning">Stop</string>
     <string name="forcedStop">Stop before reaching the goal</string>
+    <string name="itsMe">YOU ARE HERE</string>
 
 </resources>
