@@ -6,21 +6,20 @@ package com.example.erox.running;
 
 public class RunningLogs {
 
-    public int timeInSeconds,distanceDone;
-    String distanceProposed, avgWalkingtime;
-    public int getTimeInSeconds() {
-        return timeInSeconds;
-    }
 
-    public void setTimeInSeconds(int timeInSeconds) {
+    public float timeInSeconds;
+    String distanceProposed, avgWalkingtime,distanceDone;
+    public float getTimeInSeconds() { return timeInSeconds; }
+
+    public void setTimeInSeconds(float timeInSeconds) {
         this.timeInSeconds = timeInSeconds;
     }
 
-    public int getDistanceDone() {
+    public String getDistanceDone() {
         return distanceDone;
     }
 
-    public void setDistanceDone(int distanceDone) {
+    public void setDistanceDone(String distanceDone) {
         this.distanceDone = distanceDone;
     }
 

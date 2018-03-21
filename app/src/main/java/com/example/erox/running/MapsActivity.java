@@ -67,13 +67,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
     // Whether the display should be refreshed.
-    public static boolean refreshDisplay;
-    private String proposedDistance,avgTime;
+    private String proposedDistance,avgTime, finalDistance;
     public static String sPref = null;
     NetworkReceiver receiver;
     LocationRequest mLocationRequest;
     private GoogleMap mMap;
-    private boolean mapClicked = false;
+    private boolean mapClicked = false, stopButtonClicked  = false;
     private Marker destination,origin,person;
     private LocationCallback mLocationCallback;
     private Location mCurrentLocation;
@@ -87,7 +86,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     Button start, stop;
     Polyline line;
-    private Button startButton;
     private long startTime;
 
     @Override
@@ -193,40 +191,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-
-    // Populates the activity's options menu.
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mainmenu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    // Handles the user's menu selection.
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.settings:
-                Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
-                startActivity(settingsActivity);
-                return true;
-            case R.id.Profile:
-                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
-                startActivity(profileActivity);
-                return true;
-            case R.id.Music:
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
-                return true;
-            case R.id.Groups:
-                //Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
-                //startActivity(groupsActivity);
-                Toast.makeText(this, "Can't implement Group funcionality at the moment", Toast.LENGTH_LONG).show();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     public void startRunningClicked(View view) {
         if (mapClicked == false) {
             Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
@@ -236,22 +200,61 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             startLocationUpdates();
             build_retrofit_and_get_response("walking");
             startTime = System.currentTimeMillis();
-            long finishTime = System.currentTimeMillis();
-            float totalTime = (finishTime - startTime) / 1000;
-
         }
     }
 
-    public void stopRunningClicked(View view){
-        Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
-        stopLocationUpdates();
+    private void calculateFinalDistanceDone(){
+        String url = "https://maps.googleapis.com/maps/";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
+
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
+        call.enqueue(new Callback<Example>() {
+            @Override
+            public void onResponse(Response<Example> response, Retrofit retrofit) {
+                for (int i = 0; i < response.body().getRoutes().size(); i++) {
+                    String distance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                    finalDistance = distance;
+                }
+            }
+            @Override
+            public void onFailure(Throwable t) {
+                Log.d("onFailure", t.toString());
+            }
+        });
+    }
+
+    private void endOfTheRun(){
         RunningLogs actualLog = new RunningLogs();
         actualLog.setAvgWalkingTime(avgTime);
         actualLog.setDistanceProposed(proposedDistance);
+        long finishTime = System.currentTimeMillis();
+        float totalTime = (finishTime - startTime) / 1000;
+        actualLog.setTimeInSeconds(totalTime);
 
-        //HERE THE LOG GOES TO THE BACKEND
+        if(stopButtonClicked){
+            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
+            calculateFinalDistanceDone();
+            actualLog.setDistanceDone(finalDistance);
+        }else{
+            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
+            actualLog.setDistanceDone(proposedDistance);
+        }
+
+        //HERE THE LOG GOES TO THE BACKEND AND THE ACTIVITY GOES TO ANOTHER ONE THAT WILL READ THAT LOG AND SHOW IT
+        mMap.clear();
     }
 
+    public void stopRunningClicked(View view){
+        stopLocationUpdates();
+        stopButtonClicked = true;
+        endOfTheRun();
+    }
     private void build_retrofit_and_get_response(String type) {
 
         String url = "https://maps.googleapis.com/maps/";
@@ -344,7 +347,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updatePosition() {
-
         if(mCurrentLocation != null && person != null){
             person.remove();
             person = mMap.addMarker(new MarkerOptions().
@@ -385,9 +387,47 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 super.onLocationResult(locationResult);
                 mCurrentLocation = locationResult.getLastLocation();
+                System.out.println("Arrived to Callback" + mCurrentLocation.getLongitude() + " KJBASDF " + mCurrentLocation.getLatitude());
                 updatePosition();
+                if(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude()) == destination.getPosition()){
+                    endOfTheRun();
+                    stopLocationUpdates();
+                }
             }
         };
+    }
+
+    // Populates the activity's options menu.
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainmenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    // Handles the user's menu selection.
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
+                startActivity(settingsActivity);
+                return true;
+            case R.id.Profile:
+                Intent profileActivity = new Intent(getBaseContext(), ProfileActivity.class);
+                startActivity(profileActivity);
+                return true;
+            case R.id.Music:
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com")));
+                return true;
+            case R.id.Groups:
+                //Intent groupsActivity = new Intent(getBaseContext(), GroupsActivity.class);
+                //startActivity(groupsActivity);
+                Toast.makeText(this, "Can't implement Group funcionality at the moment", Toast.LENGTH_LONG).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public class NetworkReceiver extends BroadcastReceiver {
