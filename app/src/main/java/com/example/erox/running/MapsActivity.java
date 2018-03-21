@@ -68,7 +68,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static boolean mobileConnected = false;
     // Whether the display should be refreshed.
     public static boolean refreshDisplay;
-
+    private String proposedDistance,avgTime;
     public static String sPref = null;
     NetworkReceiver receiver;
     LocationRequest mLocationRequest;
@@ -205,6 +205,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void stopRunningClicked(View view){
         Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
         stopLocationUpdates();
+        RunningLogs actualLog = new RunningLogs();
+        actualLog.setAvgWalkingTime(avgTime);
+        actualLog.setDistanceProposed(proposedDistance);
+
+        //HERE THE LOG GOES TO THE BACKEND
     }
 
     private void build_retrofit_and_get_response(String type) {
@@ -232,7 +237,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     // This loop will go through all the results and add marker on each location.
                     for (int i = 0; i < response.body().getRoutes().size(); i++) {
                         String distance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                        proposedDistance = distance;
                         String time = response.body().getRoutes().get(i).getLegs().get(i).getDuration().getText();
+                        avgTime = time;
                         //ShowDistanceDuration.setText("Distance:" + distance + ", Duration:" + time);
                         String encodedString = response.body().getRoutes().get(0).getOverviewPolyline().getPoints();
                         List<LatLng> list = decodePoly(encodedString);

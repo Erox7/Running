@@ -6,8 +6,8 @@ package com.example.erox.running;
 
 public class RunningLogs {
 
-    public int timeInSeconds,distanceDone,distanceProposed,avgWalkingTime;
-
+    public int timeInSeconds,distanceDone;
+    String distanceProposed, avgWalkingtime;
     public int getTimeInSeconds() {
         return timeInSeconds;
     }
@@ -24,24 +24,22 @@ public class RunningLogs {
         this.distanceDone = distanceDone;
     }
 
-    public int getAvgWalkingTime() {
-        return avgWalkingTime;
+    public String getAvgWalkingTime() {
+        return avgWalkingtime;
     }
 
-    public void setAvgWalkingTime(int avgWalkingTime) {
-        this.avgWalkingTime = avgWalkingTime;
+    public void setAvgWalkingTime(String avgWalkingTime) {
+        this.avgWalkingtime = avgWalkingTime;
     }
 
-    public int getDistanceProposed() {
+    public String getDistanceProposed() {
         return distanceProposed;
     }
 
-    public void setDistanceProposed(int distanceProposed) {
-        this.distanceProposed = distanceProposed;
-    }
+    public void setDistanceProposed(String distanceProposed) { this.distanceProposed = distanceProposed;  }
 
     @Override
     public String toString() {
-        return this.distanceProposed + "KM PROPOSED, " + this.avgWalkingTime + "WALKING TIME, " + this.distanceDone + "KM DONE, " + "IT TOOK YOU:" + (this.timeInSeconds/3600) + "H TO END";
+        return this.distanceProposed + "KM PROPOSED, " + this.avgWalkingtime + "WALKING TIME, " + this.distanceDone + "KM DONE, " + "IT TOOK YOU:" + (this.timeInSeconds/3600) + "H TO END";
     }
 }
