@@ -66,8 +66,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     Polyline line;
     private Button startButton;
     private long startTime;
-    private long finishTime;
-    private float totalTime;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,8 +199,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             } else {
                 startButton.setText(R.string.StartRunning);
-                finishTime = System.currentTimeMillis();
-                totalTime = (finishTime - startTime)/1000;
+                long finishTime = System.currentTimeMillis();
+                float totalTime = (finishTime - startTime) / 1000;
 
                 Toast.makeText(this, "Time: "+ totalTime + "seconds", Toast.LENGTH_LONG).show();
             }
