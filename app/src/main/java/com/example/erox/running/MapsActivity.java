@@ -166,12 +166,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onComplete(@NonNull Task<Location> task) {
                 float zoomlvl = 15.0f;
                 mCurrentLocation = task.getResult();
-                LatLng first = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-                origin = mMap.addMarker(new MarkerOptions().
-                        position(first).
-                        title(getString(R.string.origin)).
-                        icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(first, zoomlvl));
+                if(mCurrentLocation != null) {
+                    LatLng first = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                    origin = mMap.addMarker(new MarkerOptions().
+                            position(first).
+                            title(getString(R.string.origin)).
+                            icon(BitmapDescriptorFactory.fromResource(R.drawable.red_dot)));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(first, zoomlvl));
+                }
             }
         });
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
@@ -237,7 +239,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         float totalTime = (finishTime - startTime) / 1000;
         actualLog.setTimeInSeconds(totalTime);
 
-        if(stopButtonClicked){
+        if(!stopButtonClicked){
             Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
             calculateFinalDistanceDone();
             actualLog.setDistanceDone(finalDistance);
