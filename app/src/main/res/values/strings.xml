@@ -29,5 +29,9 @@
     <string name="endOfTheroad">You reached your goal!</string>
     <string name="askShowPassword">Show password characters?</string>
     <string name="title_register">Register Phse</string>
+    <string name="authFail">Authentication Failed</string>
+    <string name="authSuccs">Authenticated Correctly</string>
+    <string name="missInformation">Missing email or password.</string>
+    <string name="invalidMail">Introduce a valid email.</string>
 
 </resources>

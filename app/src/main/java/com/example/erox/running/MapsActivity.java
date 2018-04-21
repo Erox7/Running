@@ -93,7 +93,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
+        if(!(savedInstanceState == null)) {
+            String UID = savedInstanceState.getString("user");
+        }
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationCallback();
         createLocationRequest();

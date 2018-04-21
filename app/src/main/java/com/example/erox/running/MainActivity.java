@@ -11,13 +11,23 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.regex.Pattern;
+
 public class MainActivity extends AppCompatActivity {
     public EditText userET;
     public EditText passwordET;
+    private FirebaseAuth mAuth;
     private static final String TAG = "MainActivity";
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
@@ -27,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         userET = findViewById(R.id.user);
         passwordET = findViewById(R.id.password);
+        mAuth = FirebaseAuth.getInstance();
     }
     @Override
     public void onStart(){
@@ -37,13 +48,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void logInFunction(View view){
-
-        if(getString(R.string.correctPasswd).equals(passwordET.getText().toString())
-                && getString(R.string.correctUsr).equals(userET.getText().toString())){
-
-            Intent in = new Intent(this, MapsActivity.class );
-            startActivity(in);
+        String email = userET.getText().toString();
+        String password = passwordET.getText().toString();
+        if(!(email == null || password == null)) {
+            if(validateEmail(email)) {
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    // Sign in success, update UI with the signed-in user's information
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    Intent in = new Intent(MainActivity.this,MapsActivity.class);
+                                    in.putExtra("userUID", user.getUid());
+                                    startActivity(in);
+                                } else {
+                                    // If sign in fails, display a message to the user.
+                                    Toast.makeText(MainActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+            }else{
+                Toast.makeText(MainActivity.this, getString(R.string.invalidMail),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            Toast.makeText(MainActivity.this, getString(R.string.missInformation),
+                    Toast.LENGTH_SHORT).show();
         }
+
+    }
+
+    private boolean validateEmail(String email) {
+        Pattern pattern = Patterns.EMAIL_ADDRESS;
+        return pattern.matcher(email).matches();
     }
 
     public void registerFunction(View view) {
