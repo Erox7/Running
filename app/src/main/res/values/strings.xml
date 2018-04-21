@@ -27,5 +27,7 @@
     <string name="forcedStop">Stop before reaching the goal</string>
     <string name="itsMe">YOU ARE HERE</string>
     <string name="endOfTheroad">You reached your goal!</string>
+    <string name="askShowPassword">Show password characters?</string>
+    <string name="title_register">Register Phse</string>
 
 </resources>
