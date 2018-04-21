@@ -87,6 +87,6 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.8"
-        android:clickable="false"/>
+        android:onClick="registerFunction"/>
 
 </android.support.constraint.ConstraintLayout>

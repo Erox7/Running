@@ -36,6 +36,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void logInFunction(View view){
+
+        if(getString(R.string.correctPasswd).equals(passwordET.getText().toString())
+                && getString(R.string.correctUsr).equals(userET.getText().toString())){
+
+            Intent in = new Intent(this, MapsActivity.class );
+            startActivity(in);
+        }
+    }
+
+    public void registerFunction(View view) {
+        Intent in = new Intent(this, RegisterActivity.class );
+        startActivity(in);
+    }
+
     private boolean checkPermissions() {
         int permissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
@@ -129,13 +144,4 @@ public class MainActivity extends AppCompatActivity {
                 REQUEST_PERMISSIONS_REQUEST_CODE);
     }
 
-    public void logInFunction(View view){
-
-        if(getString(R.string.correctPasswd).equals(passwordET.getText().toString())
-        && getString(R.string.correctUsr).equals(userET.getText().toString())){
-
-            Intent in = new Intent(this, MapsActivity.class );
-            startActivity(in);
-        }
-    }
 }
