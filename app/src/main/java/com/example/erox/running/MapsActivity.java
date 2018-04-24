@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -18,7 +17,6 @@ import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.util.SortedList;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,7 +25,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
-
 import com.example.erox.running.POJO.Example;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -61,12 +58,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
-
-    // Whether there is a Wi-Fi connection.
     private static boolean wifiConnected = false;
-    // Whether there is a mobile connection.
     private static boolean mobileConnected = false;
-    // Whether the display should be refreshed.
     private String proposedDistance,avgTime, finalDistance;
     public static String sPref = null;
     NetworkReceiver receiver;
@@ -78,10 +71,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location mCurrentLocation;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
     private FusedLocationProviderClient mFusedLocationClient;
-    /**
-     * The fastest rate for active location updates. Exact. Updates will never be more frequent
-     * than this value.
-     */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     Button start, stop;
@@ -111,6 +100,44 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
+    }
+
+    protected void createLocationRequest(){
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+
+                super.onLocationResult(locationResult);
+                mCurrentLocation = locationResult.getLastLocation();
+                updatePosition();
+                if(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude()) == destination.getPosition()){
+                    endOfTheRun();
+                    stopLocationUpdates();
+                }
+            }
+        };
+    }
+
+    private void updatePosition() {
+        if(mCurrentLocation != null && person != null){
+            person.remove();
+            person = mMap.addMarker(new MarkerOptions().
+                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    title(getString(R.string.itsMe)).
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
+        }else if( mCurrentLocation != null){
+            person = mMap.addMarker(new MarkerOptions().
+                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    title(getString(R.string.itsMe)).
+                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
+        }
     }
 
     @Override
@@ -149,15 +176,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -196,7 +214,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void startRunningClicked(View view) {
-        if (mapClicked == false) {
+        if (!mapClicked) {
             Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
         } else {
             start.setVisibility(View.INVISIBLE);
@@ -207,59 +225,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void calculateFinalDistanceDone(){
-        String url = "https://maps.googleapis.com/maps/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
-
-        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
-        call.enqueue(new Callback<Example>() {
-            @Override
-            public void onResponse(Response<Example> response, Retrofit retrofit) {
-                for (int i = 0; i < response.body().getRoutes().size(); i++) {
-                    String distance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
-                    finalDistance = distance;
-                }
-            }
-            @Override
-            public void onFailure(Throwable t) {
-                Log.d("onFailure", t.toString());
-            }
-        });
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdates(){
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper());
+        updatePosition();
     }
 
-    private void endOfTheRun(){
-        RunningLogs actualLog = new RunningLogs();
-        actualLog.setAvgWalkingTime(avgTime);
-        actualLog.setDistanceProposed(proposedDistance);
-        long finishTime = System.currentTimeMillis();
-        float totalTime = (finishTime - startTime) / 1000;
-        actualLog.setTimeInSeconds(totalTime);
-
-        if(!stopButtonClicked){
-            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
-            calculateFinalDistanceDone();
-            actualLog.setDistanceDone(finalDistance);
-        }else{
-            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
-            actualLog.setDistanceDone(proposedDistance);
-        }
-
-        //HERE THE LOG GOES TO THE BACKEND AND THE ACTIVITY GOES TO ANOTHER ONE THAT WILL READ THAT LOG AND SHOW IT
-        mMap.clear();
-    }
-
-    public void stopRunningClicked(View view){
-        stopLocationUpdates();
-        stopButtonClicked = true;
-        endOfTheRun();
-        Toast.makeText(this,"IMPLEMENT WITH THE MUSCLE THE FINAL PART",Toast.LENGTH_LONG).show();
-    }
     private void build_retrofit_and_get_response(String type) {
 
         String url = "https://maps.googleapis.com/maps/";
@@ -283,10 +254,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                     // This loop will go through all the results and add marker on each location.
                     for (int i = 0; i < response.body().getRoutes().size(); i++) {
-                        String distance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
-                        proposedDistance = distance;
-                        String time = response.body().getRoutes().get(i).getLegs().get(i).getDuration().getText();
-                        avgTime = time;
+                        proposedDistance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                        avgTime = response.body().getRoutes().get(i).getLegs().get(i).getDuration().getText();
                         //ShowDistanceDuration.setText("Distance:" + distance + ", Duration:" + time);
                         String encodedString = response.body().getRoutes().get(0).getOverviewPolyline().getPoints();
                         List<LatLng> list = decodePoly(encodedString);
@@ -312,7 +281,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private List<LatLng> decodePoly(String encoded) {
-        List<LatLng> poly = new ArrayList<LatLng>();
+        List<LatLng> poly = new ArrayList<>();
         int index = 0, len = encoded.length();
         int lat = 0, lng = 0;
 
@@ -344,26 +313,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return poly;
     }
 
-
-    @SuppressLint("MissingPermission")
-    private void startLocationUpdates(){
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper());
-        updatePosition();
-    }
-
-    private void updatePosition() {
-        if(mCurrentLocation != null && person != null){
-            person.remove();
-            person = mMap.addMarker(new MarkerOptions().
-                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
-                    title(getString(R.string.itsMe)).
-                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
-        }else if( mCurrentLocation != null){
-            person = mMap.addMarker(new MarkerOptions().
-                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
-                    title(getString(R.string.itsMe)).
-                    icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
-        }
+    public void stopRunningClicked(View view){
+        stopLocationUpdates();
+        stopButtonClicked = true;
+        endOfTheRun();
+        Toast.makeText(this,"IMPLEMENT WITH THE MUSCLE THE FINAL PART",Toast.LENGTH_LONG).show();
     }
 
     private void stopLocationUpdates() {
@@ -377,29 +331,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     }
                 });
-    }
-    protected void createLocationRequest(){
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    private void createLocationCallback() {
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-
-                super.onLocationResult(locationResult);
-                mCurrentLocation = locationResult.getLastLocation();
-                System.out.println("Arrived to Callback" + mCurrentLocation.getLongitude() + " KJBASDF " + mCurrentLocation.getLatitude());
-                updatePosition();
-                if(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude()) == destination.getPosition()){
-                    endOfTheRun();
-                    stopLocationUpdates();
-                }
-            }
-        };
     }
 
     // Populates the activity's options menu.
@@ -433,6 +364,51 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+    private void endOfTheRun(){
+        RunningLogs actualLog = new RunningLogs();
+        actualLog.setAvgWalkingTime(avgTime);
+        actualLog.setDistanceProposed(proposedDistance);
+        long finishTime = System.currentTimeMillis();
+        float totalTime = (finishTime - startTime) / 1000;
+        actualLog.setTimeInSeconds(totalTime);
+
+        if(!stopButtonClicked){
+            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
+            calculateFinalDistanceDone();
+            actualLog.setDistanceDone(finalDistance);
+        }else{
+            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
+            actualLog.setDistanceDone(proposedDistance);
+        }
+
+        //HERE THE LOG GOES TO THE BACKEND AND THE ACTIVITY GOES TO ANOTHER ONE THAT WILL READ THAT LOG AND SHOW IT
+        mMap.clear();
+    }
+
+    private void calculateFinalDistanceDone(){
+        String url = "https://maps.googleapis.com/maps/";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
+
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
+        call.enqueue(new Callback<Example>() {
+            @Override
+            public void onResponse(Response<Example> response, Retrofit retrofit) {
+                for (int i = 0; i < response.body().getRoutes().size(); i++) {
+                    finalDistance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                }
+            }
+            @Override
+            public void onFailure(Throwable t) {
+                Log.d("onFailure", t.toString());
+            }
+        });
     }
 
     public class NetworkReceiver extends BroadcastReceiver {

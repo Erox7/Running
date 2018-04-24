@@ -47,49 +47,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void logInFunction(View view){
-        String email = userET.getText().toString();
-        String password = passwordET.getText().toString();
-        if(!(email == null || password == null)) {
-            if(validateEmail(email)) {
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    // Sign in success, update UI with the signed-in user's information
-                                    FirebaseUser user = mAuth.getCurrentUser();
-                                    Intent in = new Intent(MainActivity.this,MapsActivity.class);
-                                    in.putExtra("userUID", user.getUid());
-                                    startActivity(in);
-                                } else {
-                                    // If sign in fails, display a message to the user.
-                                    Toast.makeText(MainActivity.this, "Authentication failed.",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
-            }else{
-                Toast.makeText(MainActivity.this, getString(R.string.invalidMail),
-                        Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            Toast.makeText(MainActivity.this, getString(R.string.missInformation),
-                    Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-    private boolean validateEmail(String email) {
-        Pattern pattern = Patterns.EMAIL_ADDRESS;
-        return pattern.matcher(email).matches();
-    }
-
-    public void registerFunction(View view) {
-        Intent in = new Intent(this, RegisterActivity.class );
-        startActivity(in);
-    }
-
     private boolean checkPermissions() {
         int permissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
@@ -182,5 +139,49 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 REQUEST_PERMISSIONS_REQUEST_CODE);
     }
+
+    public void logInFunction(View view){
+        String email = userET.getText().toString();
+        String password = passwordET.getText().toString();
+        if(!(email == null || password == null)) {
+            if(validateEmail(email)) {
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    // Sign in success, update UI with the signed-in user's information
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    Intent in = new Intent(MainActivity.this,MapsActivity.class);
+                                    in.putExtra("userUID", user.getUid());
+                                    startActivity(in);
+                                } else {
+                                    // If sign in fails, display a message to the user.
+                                    Toast.makeText(MainActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+            }else{
+                Toast.makeText(MainActivity.this, getString(R.string.invalidMail),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            Toast.makeText(MainActivity.this, getString(R.string.missInformation),
+                    Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private boolean validateEmail(String email) {
+        Pattern pattern = Patterns.EMAIL_ADDRESS;
+        return pattern.matcher(email).matches();
+    }
+
+    public void registerFunction(View view) {
+        Intent in = new Intent(this, RegisterActivity.class );
+        startActivity(in);
+    }
+
 
 }
