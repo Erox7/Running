@@ -33,5 +33,8 @@
     <string name="authSuccs">Authenticated Correctly</string>
     <string name="missInformation">Missing email or password.</string>
     <string name="invalidMail">Introduce a valid email.</string>
+    <string name="rToMap">Return To Map</string>
+    <string name="noResults">No Results Found</string>
+    <string name="Result">Result</string>
 
 </resources>

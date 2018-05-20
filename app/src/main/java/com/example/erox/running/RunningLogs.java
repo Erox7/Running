@@ -1,14 +1,17 @@
 package com.example.erox.running;
 
+import java.io.Serializable;
+
 /**
  * Created by Erox on 20/03/2018.
  */
 
-public class RunningLogs {
+public class RunningLogs implements Serializable{
 
 
     public float timeInSeconds;
     String distanceProposed, avgWalkingtime,distanceDone;
+
     public float getTimeInSeconds() { return timeInSeconds; }
 
     public void setTimeInSeconds(float timeInSeconds) {
@@ -39,6 +42,6 @@ public class RunningLogs {
 
     @Override
     public String toString() {
-        return this.distanceProposed + "KM PROPOSED, " + this.avgWalkingtime + "WALKING TIME, " + this.distanceDone + "KM DONE, " + "IT TOOK YOU:" + (this.timeInSeconds/3600) + "H TO END";
+        return this.distanceProposed + " PROPOSED, " + this.distanceDone + " DONE, " + "\n"  + this.avgWalkingtime + " AVERAGE WALKING TIME, " + "IT TOOK YOU:" + (this.timeInSeconds/60) + "H TO END";
     }
 }

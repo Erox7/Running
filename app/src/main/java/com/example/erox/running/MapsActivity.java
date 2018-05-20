@@ -317,7 +317,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         stopLocationUpdates();
         stopButtonClicked = true;
         endOfTheRun();
-        Toast.makeText(this,"IMPLEMENT WITH THE MUSCLE THE FINAL PART",Toast.LENGTH_LONG).show();
     }
 
     private void stopLocationUpdates() {
@@ -331,6 +330,57 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     }
                 });
+    }
+
+    private void endOfTheRun(){
+        RunningLogs actualLog = new RunningLogs();
+        actualLog.setAvgWalkingTime(avgTime);
+        actualLog.setDistanceProposed(proposedDistance);
+        long finishTime = System.currentTimeMillis();
+        float totalTime = (finishTime - startTime) / 1000;
+        actualLog.setTimeInSeconds(totalTime);
+
+        if(!stopButtonClicked){
+            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
+            calculateFinalDistanceDone();
+            actualLog.setDistanceDone(finalDistance);
+        }else{
+            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
+            actualLog.setDistanceDone(proposedDistance);
+        }
+        mMap.clear();
+        Intent toResults = new Intent(this, ResultActivity.class);
+        Bundle b = new Bundle();
+        b.putSerializable("log", actualLog);
+        toResults.putExtras(b);
+        startActivity(toResults);
+        //HERE THE LOG GOES TO THE BACKEND AND THE ACTIVITY GOES TO ANOTHER ONE THAT WILL READ THAT LOG AND SHOW IT
+
+    }
+
+    private void calculateFinalDistanceDone(){
+        String url = "https://maps.googleapis.com/maps/";
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
+
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
+        call.enqueue(new Callback<Example>() {
+            @Override
+            public void onResponse(Response<Example> response, Retrofit retrofit) {
+                for (int i = 0; i < response.body().getRoutes().size(); i++) {
+                    finalDistance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
+                }
+            }
+            @Override
+            public void onFailure(Throwable t) {
+                Log.d("onFailure", t.toString());
+            }
+        });
     }
 
     // Populates the activity's options menu.
@@ -364,51 +414,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-    private void endOfTheRun(){
-        RunningLogs actualLog = new RunningLogs();
-        actualLog.setAvgWalkingTime(avgTime);
-        actualLog.setDistanceProposed(proposedDistance);
-        long finishTime = System.currentTimeMillis();
-        float totalTime = (finishTime - startTime) / 1000;
-        actualLog.setTimeInSeconds(totalTime);
-
-        if(!stopButtonClicked){
-            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
-            calculateFinalDistanceDone();
-            actualLog.setDistanceDone(finalDistance);
-        }else{
-            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
-            actualLog.setDistanceDone(proposedDistance);
-        }
-
-        //HERE THE LOG GOES TO THE BACKEND AND THE ACTIVITY GOES TO ANOTHER ONE THAT WILL READ THAT LOG AND SHOW IT
-        mMap.clear();
-    }
-
-    private void calculateFinalDistanceDone(){
-        String url = "https://maps.googleapis.com/maps/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        RetrofitMaps service = retrofit.create(RetrofitMaps.class);
-
-        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
-        call.enqueue(new Callback<Example>() {
-            @Override
-            public void onResponse(Response<Example> response, Retrofit retrofit) {
-                for (int i = 0; i < response.body().getRoutes().size(); i++) {
-                    finalDistance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
-                }
-            }
-            @Override
-            public void onFailure(Throwable t) {
-                Log.d("onFailure", t.toString());
-            }
-        });
     }
 
     public class NetworkReceiver extends BroadcastReceiver {

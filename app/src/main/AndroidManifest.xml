@@ -58,6 +58,10 @@
             android:name=".ProfileActivity"
             android:label="@string/profile"
             />
+        <activity
+            android:name=".ResultActivity"
+            android:label="@string/Result"
+            />
 
 
 

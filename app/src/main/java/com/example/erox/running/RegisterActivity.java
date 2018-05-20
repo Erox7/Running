@@ -77,6 +77,7 @@ public class RegisterActivity extends AppCompatActivity{
                     Toast.LENGTH_SHORT).show();
         }
     }
+
     private boolean validateEmail(String email) {
         Pattern pattern = Patterns.EMAIL_ADDRESS;
         return pattern.matcher(email).matches();
