@@ -7,7 +7,7 @@ import com.google.firebase.iid.FirebaseInstanceIdService;
 
 import static android.content.ContentValues.TAG;
 
-public class FirebaseIdServiceClass extends FirebaseInstanceIdService {
+public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
     
     @Override
     public void onTokenRefresh() {
