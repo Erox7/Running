@@ -36,5 +36,7 @@
     <string name="rToMap">Return To Map</string>
     <string name="noResults">No Results Found</string>
     <string name="Result">Result</string>
+    <string name="name">Name</string>
+    <string name="email">E-Mail</string>
 
 </resources>

@@ -9,8 +9,8 @@ import java.io.Serializable;
 public class RunningLogs implements Serializable{
 
 
-    public float timeInSeconds;
-    String distanceProposed, avgWalkingtime,distanceDone;
+    private float timeInSeconds;
+    private String distanceProposed, avgWalkingtime,distanceDone;
 
     public float getTimeInSeconds() { return timeInSeconds; }
 

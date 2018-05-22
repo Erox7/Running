@@ -19,14 +19,20 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
 
 import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity{
     private EditText emailET;
     private EditText passwordET;
-    private String password,email;
+    private EditText nameET;
+    private String password,email, name, token;
     private FirebaseAuth mAuth;
+    private User userObj;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +40,20 @@ public class RegisterActivity extends AppCompatActivity{
         setContentView(R.layout.register);
         passwordET = findViewById(R.id.password);
         emailET = findViewById(R.id.user);
-
+        nameET = findViewById(R.id.name);
         mAuth = FirebaseAuth.getInstance();
+        token = FirebaseInstanceId.getInstance().getToken();
     }
 
     public void backToLogin(View view) {
         email = emailET.getText().toString();
         password = passwordET.getText().toString();
+        name = nameET.getText().toString();
         if(!(email == null || password == null)) {
             if(validateEmail(email)) {
+                if(name != null){
+                    userObj = new User(name,email,password,token);
+                }
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
@@ -50,6 +61,9 @@ public class RegisterActivity extends AppCompatActivity{
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     FirebaseUser user = mAuth.getCurrentUser();
+                                    userObj.setUID(user.getUid());
+                                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+                                    mDatabase.child("User").child(user.getUid()).setValue(userObj);
                                     Toast.makeText(RegisterActivity.this, getString(R.string.authSuccs),
                                             Toast.LENGTH_SHORT).show();
                                     try {
