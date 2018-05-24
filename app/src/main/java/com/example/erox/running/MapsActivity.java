@@ -1,6 +1,7 @@
 package com.example.erox.running;
 
 import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,8 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
@@ -23,10 +26,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 import com.example.erox.running.POJO.Example;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -45,6 +52,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import retrofit.Call;
@@ -64,18 +72,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static String sPref = null;
     NetworkReceiver receiver;
     LocationRequest mLocationRequest;
+    public static boolean isInsideOfGeofence = false;
     private GoogleMap mMap;
     private boolean mapClicked = false, stopButtonClicked  = false;
     private Marker destination,origin,person;
     private LocationCallback mLocationCallback;
     private Location mCurrentLocation;
+    private static final String GEOFENCE_ID = "MyGeofenceId";
+    public Geofence geofence;
+    Intent intent;
+    PendingIntent pendingIntent;
+    private TextView chrono;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
     private FusedLocationProviderClient mFusedLocationClient;
+    private GeofencingClient mGeofencingClient;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     Button start, stop;
     Polyline line;
-    private long startTime;
+    private long startTime = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,13 +116,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         receiver = new NetworkReceiver();
         this.registerReceiver(receiver, filter);
+
+        intent = new Intent(this, GeofenceService.class);
+        pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mGeofencingClient = LocationServices.getGeofencingClient(this);
+        chrono = findViewById(R.id.chrono);
+
+
+
     }
+
+
 
     protected void createLocationRequest(){
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
     }
 
     private void createLocationCallback() {
@@ -117,12 +144,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 super.onLocationResult(locationResult);
                 mCurrentLocation = locationResult.getLastLocation();
                 updatePosition();
-                if(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude()) == destination.getPosition()){
+                if(isInsideOfGeofence){
                     endOfTheRun();
                     stopLocationUpdates();
                 }
+
+                /*
+                if(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude()) == destination.getPosition()){
+                    endOfTheRun();
+                    stopLocationUpdates();
+                }*/
             }
         };
+    }
+
+    //geofence
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofence(geofence);
+        return builder.build();
     }
 
     private void updatePosition() {
@@ -208,6 +249,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         position(point).
                         title(getString(R.string.destiny)).
                         icon(BitmapDescriptorFactory.fromResource(R.drawable.green_dot)));
+                //Destination changes: we change the position point for a geofence with 10m radius
+                geofence = new Geofence.Builder()
+                        .setRequestId(GEOFENCE_ID)
+                        .setCircularRegion(destination.getPosition().latitude, destination.getPosition().longitude, 10)
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                        .setNotificationResponsiveness(1000)
+                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                        .build();
+
+                mGeofencingClient.addGeofences(getGeofencingRequest(),pendingIntent);
 
             }
         });
@@ -220,9 +271,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             start.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
             startLocationUpdates();
-            build_retrofit_and_get_response("walking");
+            build_retrofit_and_get_response("walking");            ;
             startTime = System.currentTimeMillis();
+            CountDownTimer newtimer = new CountDownTimer(1000000000, 1000) {
+
+                public void onTick(long millisUntilFinished) {
+                    timeCalculator();
+                }
+                public void onFinish() {
+
+                }
+            };
+            newtimer.start();
         }
+    }
+    public void timeCalculator(){
+        long actual = System.currentTimeMillis();
+        float currentTime = (actual - startTime) / 1000;
+        String str = Float.toString(currentTime);
+        System.out.println(str);
+        chrono.setText(str);
     }
 
     @SuppressLint("MissingPermission")

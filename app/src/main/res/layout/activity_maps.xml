@@ -16,6 +16,9 @@
         android:measureAllChildren="true"
         />
 
+
+
+
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -25,6 +28,19 @@
         android:layout_height="match_parent"
         tools:menu="mainmenu"
         tools:context="com.example.erox.running.MapsActivity" >
+
+        <TextView
+            android:id="@+id/chrono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+            android:text="@string/Time"
+            android:layout_marginTop="75dp"
+            android:layout_marginEnd="20dp"
+            android:textColor="@color/place_autocomplete_search_text"
+            android:textSize="43sp"
+            />
+
 
         <Button
             android:id="@+id/startRunningButton"
