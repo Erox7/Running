@@ -4,12 +4,12 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
@@ -25,11 +25,11 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     public EditText userET;
     public EditText passwordET;
     private FirebaseAuth mAuth;
-    private static final String TAG = "MainActivity";
-    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +39,11 @@ public class MainActivity extends AppCompatActivity {
         passwordET = findViewById(R.id.password);
         mAuth = FirebaseAuth.getInstance();
     }
+
     @Override
-    public void onStart(){
+    public void onStart() {
         super.onStart();
-        if(!checkPermissions()){
+        if (!checkPermissions()) {
             requestPermissions();
         }
     }
@@ -99,10 +100,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
-                Toast.makeText(this,"PERMISSION GRANTED",Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "PERMISSION GRANTED", Toast.LENGTH_LONG).show();
             } else {
 
-                Toast.makeText(this,"PERMISSION NOT GRANTED",Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "PERMISSION NOT GRANTED", Toast.LENGTH_LONG).show();
                 // Permission denied.
 
                 // Notify the user via a SnackBar that they have rejected a core permission for the
@@ -140,11 +141,11 @@ public class MainActivity extends AppCompatActivity {
                 REQUEST_PERMISSIONS_REQUEST_CODE);
     }
 
-    public void logInFunction(View view){
+    public void logInFunction(View view) {
         String email = userET.getText().toString();
         String password = passwordET.getText().toString();
-        if(!(email == null || password == null)) {
-            if(validateEmail(email)) {
+        if (!(email == null || password == null)) {
+            if (validateEmail(email)) {
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     // Sign in success, update UI with the signed-in user's information
                                     FirebaseUser user = mAuth.getCurrentUser();
-                                    Intent in = new Intent(MainActivity.this,MapsActivity.class);
+                                    Intent in = new Intent(MainActivity.this, MapsActivity.class);
                                     in.putExtra("userUID", user.getUid());
                                     startActivity(in);
                                 } else {
@@ -162,11 +163,11 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         });
-            }else{
+            } else {
                 Toast.makeText(MainActivity.this, getString(R.string.invalidMail),
                         Toast.LENGTH_SHORT).show();
             }
-        }else{
+        } else {
             Toast.makeText(MainActivity.this, getString(R.string.missInformation),
                     Toast.LENGTH_SHORT).show();
         }
@@ -179,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void registerFunction(View view) {
-        Intent in = new Intent(this, RegisterActivity.class );
+        Intent in = new Intent(this, RegisterActivity.class);
         startActivity(in);
     }
 

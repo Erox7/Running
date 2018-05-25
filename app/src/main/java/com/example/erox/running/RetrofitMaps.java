@@ -1,12 +1,14 @@
 package com.example.erox.running;
+
 import com.example.erox.running.POJO.Example;
-/**
- * Created by Erox on 19/03/2018.
- */
 
 import retrofit.Call;
 import retrofit.http.GET;
 import retrofit.http.Query;
+
+/**
+ * Created by Erox on 19/03/2018.
+ */
 
 /**
  * Created by navneet on 17/7/16.

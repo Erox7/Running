@@ -16,36 +16,28 @@ public class Route {
     private OverviewPolyline overviewPolyline;
 
     /**
-     *
-     * @return
-     * The legs
+     * @return The legs
      */
     public List<Leg> getLegs() {
         return legs;
     }
 
     /**
-     *
-     * @param legs
-     * The legs
+     * @param legs The legs
      */
     public void setLegs(List<Leg> legs) {
         this.legs = legs;
     }
 
     /**
-     *
-     * @return
-     * The overviewPolyline
+     * @return The overviewPolyline
      */
     public OverviewPolyline getOverviewPolyline() {
         return overviewPolyline;
     }
 
     /**
-     *
-     * @param overviewPolyline
-     * The overview_polyline
+     * @param overviewPolyline The overview_polyline
      */
     public void setOverviewPolyline(OverviewPolyline overviewPolyline) {
         this.overviewPolyline = overviewPolyline;

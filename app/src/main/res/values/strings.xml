@@ -39,5 +39,11 @@
     <string name="name">Name</string>
     <string name="email">E-Mail</string>
     <string name="Time">Time</string>
+    <string name="about_us">About us</string>
+    <string name="user_profile" />
+    <string name="email_adress">Email adress:</string>
+    <string name="location_lleida">Location: Lleida</string>
+    <string name="edit_variables">Edit Profile</string>
+    <string name="change">Change</string>
 
 </resources>

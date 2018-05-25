@@ -1,13 +1,10 @@
 package com.example.erox.running;
 
-import android.content.EntityIterator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.CheckBox;
@@ -22,15 +19,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdService;
 
 import java.util.regex.Pattern;
 
-public class RegisterActivity extends AppCompatActivity{
+public class RegisterActivity extends AppCompatActivity {
     private EditText emailET;
     private EditText passwordET;
     private EditText nameET;
-    private String password,email, name, token;
+    private String password, email, name, token;
     private FirebaseAuth mAuth;
     private User userObj;
 
@@ -49,10 +45,10 @@ public class RegisterActivity extends AppCompatActivity{
         email = emailET.getText().toString();
         password = passwordET.getText().toString();
         name = nameET.getText().toString();
-        if(!(email == null || password == null)) {
-            if(validateEmail(email)) {
-                if(name != null){
-                    userObj = new User(name,email,password,token);
+        if (!(email == null || password == null)) {
+            if (validateEmail(email)) {
+                if (name != null) {
+                    userObj = new User(name, email, password, token);
                 }
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -82,11 +78,11 @@ public class RegisterActivity extends AppCompatActivity{
                                 }
                             }
                         });
-            }else{
+            } else {
                 Toast.makeText(RegisterActivity.this, getString(R.string.invalidMail),
                         Toast.LENGTH_SHORT).show();
             }
-        }else{
+        } else {
             Toast.makeText(RegisterActivity.this, getString(R.string.missInformation),
                     Toast.LENGTH_SHORT).show();
         }
@@ -98,9 +94,9 @@ public class RegisterActivity extends AppCompatActivity{
     }
 
     public void showPasswordDetection(View view) {
-        if(((CheckBox)view).isChecked()){
+        if (((CheckBox) view).isChecked()) {
             passwordET.setTransformationMethod(null);
-        }else{
+        } else {
             passwordET.setTransformationMethod(PasswordTransformationMethod.getInstance());
         }
     }

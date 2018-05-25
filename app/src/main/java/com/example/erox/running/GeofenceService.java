@@ -2,8 +2,6 @@ package com.example.erox.running;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.nfc.Tag;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
@@ -11,11 +9,11 @@ import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.List;
 
-public class GeofenceService extends IntentService{
+public class GeofenceService extends IntentService {
 
     public static final String TAG = "GeofenceService";
 
-    public GeofenceService(){
+    public GeofenceService() {
         super(TAG);
     }
 
@@ -28,7 +26,7 @@ public class GeofenceService extends IntentService{
             Geofence geofence = geofences.get(0);
             String requestId = geofence.getRequestId();
 
-            if (transition == Geofence.GEOFENCE_TRANSITION_ENTER){
+            if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
                 Log.d(TAG, "Entering geofence");
                 MapsActivity.isInsideOfGeofence = true;
             }

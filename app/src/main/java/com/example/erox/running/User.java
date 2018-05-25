@@ -7,7 +7,7 @@ public class User {
     private String token;
     private String UID = null;
 
-    public User(String name, String email, String password, String token, String UID){
+    public User(String name, String email, String password, String token, String UID) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -15,7 +15,7 @@ public class User {
         this.UID = UID;
     }
 
-    public User(String name, String email, String password, String token){
+    public User(String name, String email, String password, String token) {
         this.name = name;
         this.email = email;
         this.password = password;

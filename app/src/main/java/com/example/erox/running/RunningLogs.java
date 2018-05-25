@@ -6,13 +6,15 @@ import java.io.Serializable;
  * Created by Erox on 20/03/2018.
  */
 
-public class RunningLogs implements Serializable{
+public class RunningLogs implements Serializable {
 
 
     private float timeInSeconds;
-    private String distanceProposed, avgWalkingtime,distanceDone;
+    private String distanceProposed, avgWalkingtime, distanceDone;
 
-    public float getTimeInSeconds() { return timeInSeconds; }
+    public float getTimeInSeconds() {
+        return timeInSeconds;
+    }
 
     public void setTimeInSeconds(float timeInSeconds) {
         this.timeInSeconds = timeInSeconds;
@@ -38,10 +40,12 @@ public class RunningLogs implements Serializable{
         return distanceProposed;
     }
 
-    public void setDistanceProposed(String distanceProposed) { this.distanceProposed = distanceProposed;  }
+    public void setDistanceProposed(String distanceProposed) {
+        this.distanceProposed = distanceProposed;
+    }
 
     @Override
     public String toString() {
-        return this.distanceProposed + " PROPOSED, " + this.distanceDone + " DONE, " + "\n"  + this.avgWalkingtime + " AVERAGE WALKING TIME, " + "IT TOOK YOU:" + (this.timeInSeconds/60) + "H TO END";
+        return this.distanceProposed + " PROPOSED, " + this.distanceDone + " DONE, " + "\n" + this.avgWalkingtime + " AVERAGE WALKING TIME, " + "IT TOOK YOU:" + (this.timeInSeconds / 60) + "H TO END";
     }
 }

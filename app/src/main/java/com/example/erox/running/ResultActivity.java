@@ -9,16 +9,17 @@ import android.widget.TextView;
 public class ResultActivity extends AppCompatActivity {
     RunningLogs log;
     TextView results;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.results);
         results = findViewById(R.id.tv);
-        if(getIntent() != null){
+        if (getIntent() != null) {
             Bundle b = getIntent().getExtras();
             log = (RunningLogs) b.getSerializable("log");
             results.setText(log.toString());
-        } else{
+        } else {
             results.setText(getString(R.string.noResults));
         }
 

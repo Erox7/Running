@@ -13,13 +13,13 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,7 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.support.v7.widget.Toolbar;
+
 import com.example.erox.running.POJO.Example;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Geofence;
@@ -52,7 +52,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
-
 import java.util.List;
 
 import retrofit.Call;
@@ -66,30 +65,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public static final String WIFI = "Wi-Fi";
     public static final String ANY = "Any";
-    private static boolean wifiConnected = false;
-    private static boolean mobileConnected = false;
-    private String proposedDistance,avgTime, finalDistance;
-    public static String sPref = null;
-    NetworkReceiver receiver;
-    LocationRequest mLocationRequest;
-    public static boolean isInsideOfGeofence = false;
-    private GoogleMap mMap;
-    private boolean mapClicked = false, stopButtonClicked  = false;
-    private Marker destination,origin,person;
-    private LocationCallback mLocationCallback;
-    private Location mCurrentLocation;
     private static final String GEOFENCE_ID = "MyGeofenceId";
-    public Geofence geofence;
-    Intent intent;
-    PendingIntent pendingIntent;
-    private TextView chrono;
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-    private FusedLocationProviderClient mFusedLocationClient;
-    private GeofencingClient mGeofencingClient;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    public static String sPref = null;
+    public static boolean isInsideOfGeofence = false;
+    private static boolean wifiConnected = false;
+    private static boolean mobileConnected = false;
+    public Geofence geofence;
+    NetworkReceiver receiver;
+    LocationRequest mLocationRequest;
+    Intent intent;
+    PendingIntent pendingIntent;
     Button start, stop;
     Polyline line;
+    private String proposedDistance, avgTime, finalDistance;
+    private GoogleMap mMap;
+    private boolean mapClicked = false, stopButtonClicked = false;
+    private Marker destination, origin, person;
+    private LocationCallback mLocationCallback;
+    private Location mCurrentLocation;
+    private TextView chrono;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private GeofencingClient mGeofencingClient;
     private long startTime = 0;
 
 
@@ -98,7 +97,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        if(!(savedInstanceState == null)) {
+        if (!(savedInstanceState == null)) {
             String UID = savedInstanceState.getString("user");
         }
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -123,12 +122,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         chrono = findViewById(R.id.chrono);
 
 
-
     }
 
 
-
-    protected void createLocationRequest(){
+    protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
@@ -144,7 +141,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 super.onLocationResult(locationResult);
                 mCurrentLocation = locationResult.getLastLocation();
                 updatePosition();
-                if(isInsideOfGeofence){
+                if (isInsideOfGeofence) {
                     endOfTheRun();
                     stopLocationUpdates();
                 }
@@ -167,15 +164,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updatePosition() {
-        if(mCurrentLocation != null && person != null){
+        if (mCurrentLocation != null && person != null) {
             person.remove();
             person = mMap.addMarker(new MarkerOptions().
-                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())).
                     title(getString(R.string.itsMe)).
                     icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
-        }else if( mCurrentLocation != null){
+        } else if (mCurrentLocation != null) {
             person = mMap.addMarker(new MarkerOptions().
-                    position(new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude())).
+                    position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())).
                     title(getString(R.string.itsMe)).
                     icon(BitmapDescriptorFactory.fromResource(R.drawable.main_arrow)));
         }
@@ -227,7 +224,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onComplete(@NonNull Task<Location> task) {
                 float zoomlvl = 15.0f;
                 mCurrentLocation = task.getResult();
-                if(mCurrentLocation != null) {
+                if (mCurrentLocation != null) {
                     LatLng first = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                     origin = mMap.addMarker(new MarkerOptions().
                             position(first).
@@ -258,7 +255,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                         .build();
 
-                mGeofencingClient.addGeofences(getGeofencingRequest(),pendingIntent);
+                mGeofencingClient.addGeofences(getGeofencingRequest(), pendingIntent);
 
             }
         });
@@ -271,13 +268,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             start.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
             startLocationUpdates();
-            build_retrofit_and_get_response("walking");            ;
+            build_retrofit_and_get_response("walking");
+            ;
             startTime = System.currentTimeMillis();
             CountDownTimer newtimer = new CountDownTimer(1000000000, 1000) {
 
                 public void onTick(long millisUntilFinished) {
                     timeCalculator();
                 }
+
                 public void onFinish() {
 
                 }
@@ -285,7 +284,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             newtimer.start();
         }
     }
-    public void timeCalculator(){
+
+    public void timeCalculator() {
         long actual = System.currentTimeMillis();
         float currentTime = (actual - startTime) / 1000;
         String str = Float.toString(currentTime);
@@ -294,8 +294,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @SuppressLint("MissingPermission")
-    private void startLocationUpdates(){
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper());
+    private void startLocationUpdates() {
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
         updatePosition();
     }
 
@@ -310,7 +310,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
-        Call<Example> call = service.getDistanceDuration("metric", mCurrentLocation.getLatitude()+ "," + mCurrentLocation.getLongitude(),destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
+        Call<Example> call = service.getDistanceDuration("metric", mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude(), destination.getPosition().latitude + "," + destination.getPosition().longitude, type);
         call.enqueue(new Callback<Example>() {
             @Override
             public void onResponse(Response<Example> response, Retrofit retrofit) {
@@ -381,7 +381,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         return poly;
     }
 
-    public void stopRunningClicked(View view){
+    public void stopRunningClicked(View view) {
         stopLocationUpdates();
         stopButtonClicked = true;
         endOfTheRun();
@@ -400,7 +400,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
-    private void endOfTheRun(){
+    private void endOfTheRun() {
         RunningLogs actualLog = new RunningLogs();
         actualLog.setAvgWalkingTime(avgTime);
         actualLog.setDistanceProposed(proposedDistance);
@@ -408,12 +408,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         float totalTime = (finishTime - startTime) / 1000;
         actualLog.setTimeInSeconds(totalTime);
 
-        if(!stopButtonClicked){
-            Toast.makeText(this,getString(R.string.endOfTheroad),Toast.LENGTH_LONG).show();
+        if (!stopButtonClicked) {
+            Toast.makeText(this, getString(R.string.endOfTheroad), Toast.LENGTH_LONG).show();
             calculateFinalDistanceDone();
             actualLog.setDistanceDone(finalDistance);
-        }else{
-            Toast.makeText(this,getString(R.string.forcedStop),Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, getString(R.string.forcedStop), Toast.LENGTH_LONG).show();
             actualLog.setDistanceDone(proposedDistance);
         }
         mMap.clear();
@@ -426,7 +426,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void calculateFinalDistanceDone(){
+    private void calculateFinalDistanceDone() {
         String url = "https://maps.googleapis.com/maps/";
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -436,7 +436,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RetrofitMaps service = retrofit.create(RetrofitMaps.class);
 
-        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude,destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
+        Call<Example> call = service.getDistanceDuration("metric", origin.getPosition().latitude + "," + origin.getPosition().longitude, destination.getPosition().latitude + "," + destination.getPosition().longitude, "walking");
         call.enqueue(new Callback<Example>() {
             @Override
             public void onResponse(Response<Example> response, Retrofit retrofit) {
@@ -444,6 +444,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     finalDistance = response.body().getRoutes().get(i).getLegs().get(i).getDistance().getText();
                 }
             }
+
             @Override
             public void onFailure(Throwable t) {
                 Log.d("onFailure", t.toString());
@@ -479,6 +480,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //startActivity(groupsActivity);
                 Toast.makeText(this, "Can't implement Group funcionality at the moment", Toast.LENGTH_LONG).show();
                 return true;
+            case R.id.About:
+                startActivity(new Intent(getBaseContext(), AboutActivity.class));
             default:
                 return super.onOptionsItemSelected(item);
         }

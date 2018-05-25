@@ -8,4 +8,6 @@
         android:title="@string/music" />
     <item android:id="@+id/Groups"
         android:title="@string/groups" />
+    <item android:id="@+id/About"
+        android:title="@string/about_us" />
 </menu>
