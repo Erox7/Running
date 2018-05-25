@@ -255,21 +255,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                         .build();
 
-                mGeofencingClient.addGeofences(getGeofencingRequest(), pendingIntent);
+
 
             }
         });
+
+    }
+    public AppCompatActivity getActivity(){
+        return this;
     }
 
+    @SuppressLint("MissingPermission")
     public void startRunningClicked(View view) {
         if (!mapClicked) {
             Toast.makeText(this, getString(R.string.noPositionClicked), Toast.LENGTH_LONG).show();
         } else {
+            mGeofencingClient.addGeofences(getGeofencingRequest(), pendingIntent).addOnCompleteListener(getActivity(), new MyOnCompleteListener());
             start.setVisibility(View.INVISIBLE);
             stop.setVisibility(View.VISIBLE);
             startLocationUpdates();
             build_retrofit_and_get_response("walking");
-            ;
+
             startTime = System.currentTimeMillis();
             CountDownTimer newtimer = new CountDownTimer(1000000000, 1000) {
 
